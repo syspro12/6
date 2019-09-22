@@ -1,0 +1,240 @@
+1)****************************************************************************
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define newnode (struct node*)malloc(sizeof(struct node))
+
+struct node
+{
+    char s[80];                                                                         
+    struct node *next,*prev;
+}*head=NULL;
+
+char fname[40];                                                                     
+int cnt=0;
+
+void append(char st[80])                                                       
+{
+    struct node *p=NULL,*new=NULL;
+    if(head==NULL)
+    {
+        head=newnode;
+        strcpy(head->s,st);
+        head->next=head->prev=NULL;                                     
+    else
+    {
+        for(p=head ; p->next ; p=p->next);                                 
+        p->next=newnode;
+        p->next->prev=p;
+        p=p->next;
+        strcpy(p->s,st);
+        p->next=NULL;
+    }
+    ++cnt;                                                                              
+
+
+void printline()
+{
+	struct node *p;
+	 for(p=head;p;p=p->next)
+         printf("%s\n",p->s); 
+}
+
+void save()                                                                                      
+{
+    FILE *fp;
+    struct node *temp;
+    fp=fopen(fname,"w");
+    if(fp==NULL)+
+    {
+        printf("\n error in file opening");
+        return;
+    }
+    else
+    {
+        temp=head;
+        while(temp!=NULL)                                                                     
+        {
+            fputs(temp->s,fp);
+            fputs("\n",fp);
+            temp=temp->next;
+        }
+    }
+    fclose(fp);
+}
+void load()                                                                                    
+{
+	FILE *fp;
+	char buff[80];
+	fp=fopen(fname,"r");
+	if(fp==NULL)
+	{
+		printf("\nFile %s not found\n",fname);
+		exit(0);
+	}
+	while(fgets(buff,80,fp)!=NULL)                                                     
+	    append(buff);
+	fclose(fp);
+}
+
+
+int main(int argc,char *argv[0])
+{
+    char cmd[10],str[80],c;
+    FILE *fp;
+    if(argc>1)
+    {
+        strcpy(fname,argv[1]);
+        fp=fopen(fname,"r");
+        if(fp==NULL)
+        {
+            fp=fopen(fname,"w+");
+            fclose(fp);                                                                   
+            printf("\nFile %s is created.\n",fname);
+        }
+        else
+            load();                                                                             
+    }
+    
+    else
+    {
+        printf("Enter file name : ");                                           
+        scanf("%s",fname);
+        fp=fopen(fname,"r");
+        if(fp==NULL)
+        {
+            fp=fopen(fname,"w+");
+            fclose(fp);
+            printf("\nFile %s is created.\n",fname);
+        }
+        else
+            load();
+    }
+    
+    do
+    {
+        int f=0,e=0,t=0;
+        char p[80];
+        printf("\n$ : ");
+        fflush(stdin);
+        gets(cmd);
+        sscanf(cmd," %c %d %d %d",&c,&f,&e,&t);                       
+        if(c=='f')
+            sscanf(cmd," %c %c",&c,p);                                          
+        switch(c)
+        {
+            case 'A' :
+            case 'a' :   printf("\t\tEnter the string . . .\n");
+                            fflush(stdin);
+                            gets(str);
+                            while(strcmp(str,"exit"))
+                            {
+                                 append(str);                                             
+                                 fflush(stdin);
+                                 gets(str);
+                            }break;
+
+            case 'P' :
+            case 'p' :   printline();                              
+                         break;
+            
+            case 'S' :
+            case 's' :   save(); break;                                            .
+            
+            case 'H' :
+            case 'h' :   printf("\na       : To Append.\np       : To Display entire link list.\ns       : Save\nh       : Help\ne       : To Exit.\n");
+                        break;                                                             
+            
+            case 'E' :
+            case 'e' :   exit(0);                                                             
+            
+            default  :   printf("\nInvalid command..please use 'h' for help\n");
+        }
+    }while(c!='e');  
+    return 0;
+}
+
+
+2)****************************************************************************
+
+#include<stdio.h>
+#include<conio.h>
+struct node
+{
+  int pno,freq;
+}frames[20];
+int n;
+
+int page_found(int pno)
+{
+  int fno;
+  for(fno=0;fno<n;fno++)
+    if(frames[fno].pno==pno)
+       return fno;
+    return -1;
+}
+
+int get_free_frame()
+{  int fno;
+  for (fno=0; fno<=n; fno++)
+    if (frames[fno].pno==-1)
+        return(fno);
+   return(-1);
+}
+
+int get_mfu_frame()
+{
+  int fno;
+  int selfno=0;
+  for (fno=1; fno<n; fno++)
+    if(frames[fno].freq>frames[selfno].freq)
+    selfno=fno;
+  return selfno;
+}
+void main()
+{
+   int p_request[]={8,5,7,8,5,7,2,3,7,3,5,9,4,6,2};
+   int size=15;
+   int page_falts=0,i,j,fno;
+   clrscr();
+   printf("\nHow many frames:");  scanf("%d",&n);
+   //initialize frames
+   for (i=0; i<n; i++)
+   { frames[i].pno=-1;
+     frames[i].freq=0;
+   }
+
+   printf("\nPageNo     Page Frames              Page Fault");
+   printf("\n---------------------------------------------------");
+   for(i=0;i<size;i++)
+   {
+     j=page_found(p_request[i]);
+     if(j==-1)  //page fault occurs
+     {
+       j=get_free_frame();
+       if (j==-1) //no free frame - do page replacement
+         j=get_mfu_frame();
+       page_falts++;
+       frames[j].pno=p_request[i];
+       frames[j].freq=1;
+       printf("\n%4d\t ",p_request[i]);
+       for (fno=0; fno<n; fno++)
+         printf("%4d:%2d",frames[fno].pno,frames[fno].freq);
+       printf(" : YES");
+     }
+    else //page found in frame j
+    {
+       printf("\n%4d\t ",p_request[i]);
+       frames[j].freq++;
+       for (fno=0; fno<n; fno++)
+         printf("%4d:%2d",frames[fno].pno,frames[fno].freq);
+       printf(" : NO");
+    }
+   }
+  printf("\n-------------------------------------------------------");
+  printf("\n Number of Page_Falts=%d",page_falts);
+  getch();
+}
